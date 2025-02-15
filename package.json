@@ -1,0 +1,40 @@
+{
+  "name": "@paranoidninja/typeorm-faker",
+  "version": "1.0.0",
+  "description": "A utility to facilitate defining TypeORM mock entity generators",
+  "keywords": [
+    "typeorm",
+    "faker",
+    "typescript",
+    "node",
+    "nodejs",
+    "javascript",
+    "faker-js"
+  ],
+  "homepage": "https://github.com/paranoidninja-org/typeorm-faker#readme",
+  "bugs": {
+    "url": "https://github.com/paranoidninja-org/typeorm-faker/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paranoidninja-org/typeorm-faker.git"
+  },
+  "license": "MIT",
+  "author": "Ahmed Osama Ibrahim <ahmed.osama94@gmail.com>",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.3",
+    "typescript": "^5.7.3"
+  },
+  "peerDependencies": {
+    "typeorm": "^0.3.20"
+  }
+}
