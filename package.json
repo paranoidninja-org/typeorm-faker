@@ -1,6 +1,6 @@
 {
   "name": "@paranoidninja/typeorm-faker",
-  "version": "1.0.0",
+  "version": "0.0.0-alpha",
   "description": "A utility to facilitate defining TypeORM mock entity generators",
   "keywords": [
     "typeorm",
