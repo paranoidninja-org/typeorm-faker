@@ -1,8 +1,8 @@
-import { Faker } from "./faker";
+import { EntityFaker } from "./entity-faker";
 
 export class Metadata {
     private static instance: Metadata = new Metadata();
-    private entityToFakerMap: Record<string, Faker> = {};
+    private entityToFakerMap: Record<string, EntityFaker> = {};
 
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     private constructor() {}
@@ -11,7 +11,7 @@ export class Metadata {
         return Metadata.instance;
     }
 
-    registerFaker(entityClassName: string, entityFaker: Faker) {
+    registerFaker(entityClassName: string, entityFaker: EntityFaker) {
         this.entityToFakerMap[entityClassName] = entityFaker;
     }
 }

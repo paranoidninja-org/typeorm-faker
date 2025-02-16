@@ -27,6 +27,7 @@
     "noUncheckedIndexedAccess": true,
     "strictFunctionTypes": true,
     "strictPropertyInitialization": true,
-    "useUnknownInCatchVariables": true
+    "useUnknownInCatchVariables": true,
+    "types": ["vitest/globals"]
   }
 }

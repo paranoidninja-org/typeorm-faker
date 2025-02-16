@@ -7,7 +7,7 @@ import { Type } from "./interfaces/type.interface";
 import { FakerOverrides } from "./interfaces/faker-overrides.interface";
 import { FakerConfig } from "./interfaces/faker-config.interface";
 
-export class Faker<T extends ObjectLiteral = ObjectLiteral> {
+export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
     constructor(
         private readonly dataSource: DataSource,
         private readonly entityClass: Type<T>,
@@ -19,7 +19,7 @@ export class Faker<T extends ObjectLiteral = ObjectLiteral> {
 
         const overriddenKeys = [];
 
-        for (const [key, value] of Object.values(overrides)) {
+        for (const [key, value] of Object.entries(overrides)) {
             if (typeof value === "function") {
                 // TODO: pass dependencies to faker fn
                 (instance as any)[key] = await value();
@@ -30,12 +30,12 @@ export class Faker<T extends ObjectLiteral = ObjectLiteral> {
             overriddenKeys.push(key);
         }
 
-        for (const [key, fn] of Object.values(this.config)) {
+        for (const [key, fnValue] of Object.entries(this.config)) {
             if (overriddenKeys.includes(key)) {
                 continue;
             }
 
-            (instance as any)[key] = await fn();
+            (instance as any)[key] = await fnValue();
         }
 
         return instance;
@@ -73,13 +73,17 @@ export class Faker<T extends ObjectLiteral = ObjectLiteral> {
         return this.save(instances);
     }
 
-    private async save(entity: T): Promise<T>;
-    private async save(entities: T[]): Promise<T[]>;
-    private async save(entities: T | T[]): Promise<T | T[]> {
-        const entityArray = Array.isArray(entities) ? entities : [entities];
+    async save(entity: T): Promise<T>;
+    async save(entities: T[]): Promise<T[]>;
+    async save(entities: T | T[]): Promise<T | T[]> {
+        const isArray = Array.isArray(entities);
+        const entityArray = isArray ? entities : [entities];
 
         const repository = this.dataSource.getRepository(this.entityClass);
 
-        return repository.save(entityArray);
+        const savedInstances = await repository.save(entityArray);
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return isArray ? savedInstances : savedInstances[0]!;
     }
 }
