@@ -37,6 +37,7 @@
     "typescript-eslint": "^8.24.0"
   },
   "peerDependencies": {
+    "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.20"
   }
 }

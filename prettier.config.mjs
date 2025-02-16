@@ -13,7 +13,7 @@ export default {
   bracketSpacing: true,
   objectWrap: "preserve",
   bracketLine: true,
-  arrowParens: true,
+  arrowParens: "always",
   endOfLine: "lf",
   singleAttributePerLine: true,
 };
