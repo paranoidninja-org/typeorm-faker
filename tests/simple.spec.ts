@@ -1,11 +1,12 @@
 import { faker } from "@faker-js/faker";
 import { Column, DataSource, Entity, PrimaryGeneratedColumn } from "typeorm";
 
-import { registerFaker } from "../src";
+import { registerFaker } from "../src/register-faker";
+import { EntityFaker } from "entity-faker";
 
 describe("Simple faker test", () => {
     @Entity()
-    class SimpleUser {
+    class User {
         @PrimaryGeneratedColumn()
         id!: number;
 
@@ -20,24 +21,26 @@ describe("Simple faker test", () => {
     }
 
     const dataSource = new DataSource({
-        entities: [SimpleUser],
+        entities: [User],
         type: "better-sqlite3",
         database: ":memory:",
         synchronize: true,
     });
 
-    const repository = dataSource.getRepository(SimpleUser);
+    const repository = dataSource.getRepository(User);
 
     const firstNameGenerator = vi.fn(() => faker.person.firstName());
     const lastNameGenerator = vi.fn(() => faker.person.lastName());
 
-    const userFaker = registerFaker(dataSource, SimpleUser, {
-        firstName: firstNameGenerator,
-        lastName: lastNameGenerator,
-    });
+    let userFaker: EntityFaker<User>;
 
     beforeAll(async () => {
         await dataSource.initialize();
+
+        userFaker = registerFaker(dataSource, User, {
+            firstName: firstNameGenerator,
+            lastName: lastNameGenerator,
+        });
     });
 
     afterAll(async () => {

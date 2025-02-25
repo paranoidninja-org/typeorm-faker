@@ -14,4 +14,8 @@ export class Metadata {
     registerFaker(entityClassName: string, entityFaker: EntityFaker) {
         this.entityToFakerMap[entityClassName] = entityFaker;
     }
+
+    getFakerFor(entityClassName: string): EntityFaker | null {
+        return this.entityToFakerMap[entityClassName] ?? null;
+    }
 }

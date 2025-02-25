@@ -1,18 +1,29 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { DataSource, ObjectLiteral } from "typeorm";
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+import { DataSource, EntityMetadata, ObjectLiteral } from "typeorm";
 import { Type } from "./interfaces/type.interface";
 import { FakerOverrides } from "./interfaces/faker-overrides.interface";
 import { FakerConfig } from "./interfaces/faker-config.interface";
 
 export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
+    private readonly entityMetadata: EntityMetadata;
+    private readonly propertyByDatabaseColumnName: Record<string, string>;
+
     constructor(
         private readonly dataSource: DataSource,
         private readonly entityClass: Type<T>,
         private readonly config: FakerConfig<T>,
-    ) {}
+    ) {
+        this.entityMetadata = this.dataSource.getRepository(this.entityClass).metadata;
+
+        this.propertyByDatabaseColumnName = {};
+        for (const column of this.entityMetadata.columns) {
+            this.propertyByDatabaseColumnName[column.databaseName] = column.propertyName;
+        }
+    }
 
     async buildOne(overrides: FakerOverrides<T> = {}): Promise<T> {
         const instance: T = new this.entityClass();
@@ -79,8 +90,70 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         const isArray = Array.isArray(entities);
         const entityArray = isArray ? entities : [entities];
 
-        const repository = this.dataSource.getRepository(this.entityClass);
+        const entitiesToSaveByRelation: Record<string, any[]> = {};
+        for (const entity of entityArray) {
+            for (const manyToOneRelation of this.entityMetadata.manyToOneRelations) {
+                const propertiesToCheck: string[] = [];
+                let atLeastOneVirtual = false;
+                for (const joinColumn of manyToOneRelation.joinColumns) {
+                    if (joinColumn.isVirtual) {
+                        atLeastOneVirtual = true;
+                        break;
+                    }
 
+                    const propertyName = this.propertyByDatabaseColumnName[joinColumn.databaseName];
+                    if (!propertyName) {
+                        throw new Error("No property name found for non-virtual join column!");
+                    }
+
+                    propertiesToCheck.push(propertyName);
+                }
+
+                if (atLeastOneVirtual) {
+                    continue;
+                }
+
+                let allDefined = true;
+                for (const propertyToCheck of propertiesToCheck) {
+                    if ((entity as any)[propertyToCheck] === undefined || (entity as any)[propertyToCheck] === null) {
+                        allDefined = false;
+                        break;
+                    }
+                }
+
+                if (allDefined) {
+                    continue;
+                }
+
+                const relationProperty = manyToOneRelation.propertyName;
+                const relationTarget = manyToOneRelation.inverseEntityMetadata.target;
+                const relationValue = (entity as any)[relationProperty];
+
+                const relationRepository = this.dataSource.getRepository(relationTarget);
+                if (relationValue) {
+                    if (relationRepository.hasId(relationValue)) {
+                        continue;
+                    }
+
+                    let relationTargetName: string;
+                    if (typeof relationTarget === "function") {
+                        relationTargetName = relationTarget.name;
+                    } else {
+                        relationTargetName = relationTarget;
+                    }
+
+                    entitiesToSaveByRelation[relationTargetName] ??= [];
+                    entitiesToSaveByRelation[relationTargetName]?.push(relationValue);
+                }
+            }
+        }
+
+        for (const [relationTargetName, relationValues] of Object.entries(entitiesToSaveByRelation)) {
+            const relationRepository = this.dataSource.getRepository(relationTargetName);
+            await relationRepository.save(relationValues);
+        }
+
+        const repository = this.dataSource.getRepository(this.entityClass);
         const savedInstances = await repository.save(entityArray);
 
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
