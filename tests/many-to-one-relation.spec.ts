@@ -32,6 +32,9 @@ describe("Faker with many to one relation test", () => {
 
         @ManyToOne(() => Gender, (gender) => gender.users)
         gender?: Relation<Gender>;
+
+        @OneToMany(() => Post, (post) => post.user)
+        posts?: Relation<Post[]>;
     }
 
     @Entity()
@@ -46,8 +49,23 @@ describe("Faker with many to one relation test", () => {
         users?: Relation<User[]>;
     }
 
+    @Entity()
+    class Post {
+        @PrimaryGeneratedColumn()
+        id!: number;
+
+        @Column()
+        text!: string;
+
+        @Column()
+        userId!: number;
+
+        @ManyToOne(() => User, (user) => user.posts)
+        user?: Relation<User>;
+    }
+
     const dataSource = new DataSource({
-        entities: [Gender, User],
+        entities: [Gender, User, Post],
         type: "better-sqlite3",
         database: ":memory:",
         synchronize: true,
@@ -55,27 +73,30 @@ describe("Faker with many to one relation test", () => {
 
     let genderRepository: Repository<Gender>;
     let userRepository: Repository<User>;
-
-    const firstNameGenerator = vi.fn(() => faker.person.firstName());
-    const lastNameGenerator = vi.fn(() => faker.person.lastName());
-    const genderNameGenerator = vi.fn(() => faker.person.gender());
+    let postRepository: Repository<Post>;
 
     let genderFaker: EntityFaker<Gender>;
     let userFaker: EntityFaker<User>;
+    let postFaker: EntityFaker<Post>;
 
     beforeAll(async () => {
         await dataSource.initialize();
 
         genderRepository = dataSource.getRepository(Gender);
         userRepository = dataSource.getRepository(User);
+        postRepository = dataSource.getRepository(Post);
 
         genderFaker = registerFaker(dataSource, Gender, {
-            name: genderNameGenerator,
+            name: () => faker.person.gender(),
         });
 
         userFaker = registerFaker(dataSource, User, {
-            firstName: firstNameGenerator,
-            lastName: lastNameGenerator,
+            firstName: () => faker.person.firstName(),
+            lastName: () => faker.person.lastName(),
+        });
+
+        postFaker = registerFaker(dataSource, Post, {
+            text: () => faker.lorem.text(),
         });
     });
 
@@ -83,12 +104,24 @@ describe("Faker with many to one relation test", () => {
         await dataSource.destroy();
     });
 
-    it("should save many to one relations first", async () => {
+    it("should save many to one relations first (resolve foreign key dependencies regardless of entity cascade options)", async () => {
         const fakeUser = await userFaker.createOne({
             gender: () => genderFaker.buildOne(),
         });
 
         expect(genderRepository.hasId(fakeUser.gender!)).toBe(true);
         expect(userRepository.hasId(fakeUser)).toBe(true);
+    });
+
+    it("should resolve foreign key dependencies through multiple entities", async () => {
+        const fakePost = await postFaker.createOne({
+            user: () =>
+                userFaker.buildOne({
+                    gender: () => genderFaker.buildOne(),
+                }),
+        });
+
+        expect(userRepository.hasId(fakePost.user!)).toBe(true);
+        expect(postRepository.hasId(fakePost)).toBe(true);
     });
 });

@@ -2,7 +2,7 @@ import { faker } from "@faker-js/faker";
 import { Column, DataSource, Entity, PrimaryGeneratedColumn } from "typeorm";
 
 import { registerFaker } from "../src/register-faker";
-import { EntityFaker } from "entity-faker";
+import { EntityFaker } from "../src/entity-faker";
 
 describe("Simple faker test", () => {
     @Entity()

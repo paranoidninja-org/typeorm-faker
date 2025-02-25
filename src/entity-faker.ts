@@ -3,27 +3,17 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { DataSource, EntityMetadata, ObjectLiteral } from "typeorm";
+import { DataSource, ObjectLiteral } from "typeorm";
 import { Type } from "./interfaces/type.interface";
 import { FakerOverrides } from "./interfaces/faker-overrides.interface";
 import { FakerConfig } from "./interfaces/faker-config.interface";
 
 export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
-    private readonly entityMetadata: EntityMetadata;
-    private readonly propertyByDatabaseColumnName: Record<string, string>;
-
     constructor(
         private readonly dataSource: DataSource,
         private readonly entityClass: Type<T>,
         private readonly config: FakerConfig<T>,
-    ) {
-        this.entityMetadata = this.dataSource.getRepository(this.entityClass).metadata;
-
-        this.propertyByDatabaseColumnName = {};
-        for (const column of this.entityMetadata.columns) {
-            this.propertyByDatabaseColumnName[column.databaseName] = column.propertyName;
-        }
-    }
+    ) {}
 
     async buildOne(overrides: FakerOverrides<T> = {}): Promise<T> {
         const instance: T = new this.entityClass();
@@ -90,9 +80,31 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         const isArray = Array.isArray(entities);
         const entityArray = isArray ? entities : [entities];
 
+        await this.resolveAndSaveDependencies(entityArray);
+
+        const repository = this.dataSource.getRepository(this.entityClass);
+        const savedInstances = await repository.save(entityArray);
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        return isArray ? savedInstances : savedInstances[0]!;
+    }
+
+    private async resolveAndSaveDependencies<OtherEntity extends ObjectLiteral>(entityArray: OtherEntity[]) {
+        if (entityArray.length === 0) {
+            return;
+        }
+
         const entitiesToSaveByRelation: Record<string, any[]> = {};
+
+        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+        const entityMetadata = this.dataSource.getRepository(entityArray[0]!.constructor).metadata;
+        const propertyByDatabaseColumnName: Record<string, string> = {};
+        for (const column of entityMetadata.columns) {
+            propertyByDatabaseColumnName[column.databaseName] = column.propertyName;
+        }
+
         for (const entity of entityArray) {
-            for (const manyToOneRelation of this.entityMetadata.manyToOneRelations) {
+            for (const manyToOneRelation of entityMetadata.manyToOneRelations) {
                 const propertiesToCheck: string[] = [];
                 let atLeastOneVirtual = false;
                 for (const joinColumn of manyToOneRelation.joinColumns) {
@@ -101,7 +113,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
                         break;
                     }
 
-                    const propertyName = this.propertyByDatabaseColumnName[joinColumn.databaseName];
+                    const propertyName = propertyByDatabaseColumnName[joinColumn.databaseName];
                     if (!propertyName) {
                         throw new Error("No property name found for non-virtual join column!");
                     }
@@ -149,14 +161,10 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         }
 
         for (const [relationTargetName, relationValues] of Object.entries(entitiesToSaveByRelation)) {
+            await this.resolveAndSaveDependencies(relationValues);
+
             const relationRepository = this.dataSource.getRepository(relationTargetName);
             await relationRepository.save(relationValues);
         }
-
-        const repository = this.dataSource.getRepository(this.entityClass);
-        const savedInstances = await repository.save(entityArray);
-
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        return isArray ? savedInstances : savedInstances[0]!;
     }
 }
