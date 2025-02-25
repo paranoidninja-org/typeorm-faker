@@ -1,3 +1,7 @@
+# DB
+test-better-sqlite3.db
+test-sqlite.db
+
 # Logs
 logs
 *.log

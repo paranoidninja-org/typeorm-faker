@@ -64,12 +64,7 @@ describe("Faker with many to one relation test", () => {
         user?: Relation<User>;
     }
 
-    const dataSource = new DataSource({
-        entities: [Gender, User, Post],
-        type: "better-sqlite3",
-        database: ":memory:",
-        synchronize: true,
-    });
+    let dataSource: DataSource;
 
     let genderRepository: Repository<Gender>;
     let userRepository: Repository<User>;
@@ -80,6 +75,13 @@ describe("Faker with many to one relation test", () => {
     let postFaker: EntityFaker<Post>;
 
     beforeAll(async () => {
+        dataSource = new DataSource({
+            entities: [Gender, User, Post],
+            type: "better-sqlite3",
+            database: ":memory:",
+            synchronize: true,
+        });
+
         await dataSource.initialize();
 
         genderRepository = dataSource.getRepository(Gender);

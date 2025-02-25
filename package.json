@@ -26,6 +26,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
+    "test:ci": "docker compose up -d; sleep 10; npm run test; docker compose down",
     "test:watch": "vitest"
   },
   "devDependencies": {
@@ -36,7 +37,10 @@
     "eslint": "^9.20.1",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
+    "mysql": "^2.18.1",
+    "pg": "^8.13.3",
     "prettier": "^3.5.1",
+    "sqlite3": "^5.1.7",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.24.0",
     "unplugin-swc": "^1.5.1",
@@ -44,6 +48,6 @@
   },
   "peerDependencies": {
     "reflect-metadata": "^0.2.2",
-    "typeorm": "^0.3.20"
+    "typeorm": "^0.3.6"
   }
 }
