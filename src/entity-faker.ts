@@ -3,10 +3,13 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
-import { DataSource, ObjectLiteral } from "typeorm";
-import { Type } from "./interfaces/type.interface";
-import { FakerOverrides } from "./interfaces/faker-overrides.interface";
-import { FakerConfig } from "./interfaces/faker-config.interface";
+import type { DataSource, ObjectLiteral } from "typeorm";
+
+import type { FakerOverrides } from "./interfaces/faker-overrides.interface";
+import type { FakerConfig } from "./interfaces/faker-config.interface";
+import type { Type } from "./interfaces/type.interface";
+
+import { proxiedRegistry } from "./proxied-registry";
 
 export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
     constructor(
@@ -23,7 +26,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         for (const [key, value] of Object.entries(overrides)) {
             if (typeof value === "function") {
                 // TODO: pass dependencies to faker fn
-                (instance as any)[key] = await value();
+                (instance as any)[key] = await value({ registry: proxiedRegistry });
             } else {
                 (instance as any)[key] = value;
             }
@@ -36,7 +39,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
                 continue;
             }
 
-            (instance as any)[key] = await fnValue();
+            (instance as any)[key] = await fnValue({ registry: proxiedRegistry });
         }
 
         return instance;
@@ -104,10 +107,21 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         }
 
         for (const entity of entityArray) {
-            for (const manyToOneRelation of entityMetadata.manyToOneRelations) {
+            const dependencyRelations = entityMetadata.manyToOneRelations.slice();
+            outer: for (const oneToOneRelation of entityMetadata.oneToOneRelations) {
+                for (const joinColumn of oneToOneRelation.joinColumns) {
+                    if (joinColumn.target !== this.entityClass) {
+                        continue outer;
+                    }
+                }
+
+                dependencyRelations.push(oneToOneRelation);
+            }
+
+            for (const relation of dependencyRelations) {
                 const propertiesToCheck: string[] = [];
                 let atLeastOneVirtual = false;
-                for (const joinColumn of manyToOneRelation.joinColumns) {
+                for (const joinColumn of relation.joinColumns) {
                     if (joinColumn.isVirtual) {
                         atLeastOneVirtual = true;
                         break;
@@ -138,8 +152,8 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
                     }
                 }
 
-                const relationProperty = manyToOneRelation.propertyName;
-                const relationTarget = manyToOneRelation.inverseEntityMetadata.target;
+                const relationProperty = relation.propertyName;
+                const relationTarget = relation.inverseEntityMetadata.target;
                 const relationValue = (entity as any)[relationProperty];
 
                 const relationRepository = this.dataSource.getRepository(relationTarget);

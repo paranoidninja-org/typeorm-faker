@@ -1,7 +1,7 @@
 import { faker } from "@faker-js/faker";
 import { Column, DataSource, Entity, PrimaryGeneratedColumn, Repository } from "typeorm";
 
-import { createFaker } from "../src/create-faker";
+import { registerFaker, registry } from "../src";
 import { EntityFaker } from "../src/entity-faker";
 
 describe("Simple faker test", () => {
@@ -40,10 +40,12 @@ describe("Simple faker test", () => {
 
         repository = dataSource.getRepository(User);
 
-        userFaker = createFaker(dataSource, User, {
+        registerFaker(dataSource, User, {
             firstName: firstNameGenerator,
             lastName: lastNameGenerator,
         });
+
+        userFaker = registry.getFaker(dataSource, User);
     });
 
     afterAll(async () => {

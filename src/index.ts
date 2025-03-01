@@ -1,3 +1,4 @@
 import "reflect-metadata";
 
-export { createFaker } from "./create-faker";
+export { registerFaker } from "./register-faker";
+export { proxiedRegistry as registry } from "./proxied-registry";

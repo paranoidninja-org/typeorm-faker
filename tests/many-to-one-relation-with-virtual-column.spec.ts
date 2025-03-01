@@ -1,5 +1,6 @@
+import type { EntityFaker } from "../src/entity-faker";
+
 import { faker } from "@faker-js/faker";
-import { createFaker } from "../src/create-faker";
 import {
     Column,
     DataSource,
@@ -10,7 +11,8 @@ import {
     Relation,
     Repository,
 } from "typeorm";
-import { EntityFaker } from "../src/entity-faker";
+
+import { registerFaker, registry } from "../src";
 
 describe("Faker with many to one relation test", () => {
     @Entity()
@@ -64,7 +66,6 @@ describe("Faker with many to one relation test", () => {
     let userRepository: Repository<User>;
     let postRepository: Repository<Post>;
 
-    let genderFaker: EntityFaker<Gender>;
     let userFaker: EntityFaker<User>;
     let postFaker: EntityFaker<Post>;
 
@@ -82,18 +83,19 @@ describe("Faker with many to one relation test", () => {
         userRepository = dataSource.getRepository(User);
         postRepository = dataSource.getRepository(Post);
 
-        genderFaker = createFaker(dataSource, Gender, {
+        registerFaker(dataSource, Gender, {
             name: () => faker.person.gender(),
         });
-
-        userFaker = createFaker(dataSource, User, {
+        registerFaker(dataSource, User, {
             firstName: () => faker.person.firstName(),
             lastName: () => faker.person.lastName(),
         });
-
-        postFaker = createFaker(dataSource, Post, {
+        registerFaker(dataSource, Post, {
             text: () => faker.lorem.text(),
         });
+
+        userFaker = registry.getFaker(dataSource, User);
+        postFaker = registry.getFaker(dataSource, Post);
     });
 
     afterAll(async () => {
@@ -102,7 +104,11 @@ describe("Faker with many to one relation test", () => {
 
     it("should save many to one relations first (resolve foreign key dependencies regardless of entity cascade options)", async () => {
         const fakeUser = await userFaker.createOne({
-            gender: () => genderFaker.buildOne(),
+            gender: ({ registry }) => {
+                const genderFaker = registry.getFaker(dataSource, Gender);
+
+                return genderFaker.buildOne();
+            },
         });
 
         expect(genderRepository.hasId(fakeUser.gender!)).toBe(true);
@@ -111,10 +117,17 @@ describe("Faker with many to one relation test", () => {
 
     it("should resolve foreign key dependencies through multiple entities", async () => {
         const fakePost = await postFaker.createOne({
-            user: () =>
-                userFaker.buildOne({
-                    gender: () => genderFaker.buildOne(),
-                }),
+            user: ({ registry }) => {
+                const userFaker = registry.getFaker(dataSource, User);
+
+                return userFaker.buildOne({
+                    gender: ({ registry }) => {
+                        const genderFaker = registry.getFaker(dataSource, Gender);
+
+                        return genderFaker.buildOne();
+                    },
+                });
+            },
         });
 
         expect(userRepository.hasId(fakePost.user!)).toBe(true);

@@ -1,5 +1,4 @@
 import { faker } from "@faker-js/faker";
-import { createFaker } from "../src/create-faker";
 import {
     Column,
     DataSource,
@@ -13,6 +12,8 @@ import {
     TreeChildren,
     TreeParent,
 } from "typeorm";
+
+import { registerFaker, registry } from "../src";
 
 describe("Faker for tree entity tests", () => {
     @Entity()
@@ -112,11 +113,12 @@ describe("Faker for tree entity tests", () => {
     it.each([AdjacencyListCategory, NestedSetCategory, MaterializedPathCategory, ClosureTableCategory])(
         "should work with tree entity type %s for multiple levels",
         async (entityClass) => {
-            const categoryFaker = createFaker(dataSource, entityClass, {
+            registerFaker(dataSource, entityClass, {
                 name: () => faker.commerce.product(),
             });
             const repository = dataSource.getRepository(entityClass);
 
+            const categoryFaker = registry.getFaker(dataSource, entityClass);
             const fakeCategory = await categoryFaker.createOne({
                 parent: () =>
                     categoryFaker.buildOne({
@@ -126,9 +128,9 @@ describe("Faker for tree entity tests", () => {
 
             expect(repository.hasId(fakeCategory)).toBe(true);
             expect(fakeCategory.parent).toBeTruthy();
-            expect(repository.hasId(fakeCategory.parent!)).toBe(true);
+            expect(repository.hasId(fakeCategory.parent)).toBe(true);
             expect(fakeCategory.parent?.parent).toBeTruthy();
-            expect(repository.hasId(fakeCategory.parent!.parent!)).toBe(true);
+            expect(repository.hasId(fakeCategory.parent!.parent)).toBe(true);
         },
     );
 });

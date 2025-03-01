@@ -1,3 +1,5 @@
+import type { Type } from "../src/interfaces/type.interface";
+
 import { faker } from "@faker-js/faker";
 import {
     Column,
@@ -10,8 +12,7 @@ import {
     PrimaryGeneratedColumn,
 } from "typeorm";
 
-import { createFaker } from "../src/create-faker";
-import { Type } from "interfaces/type.interface";
+import { registerFaker, registry } from "../src";
 
 describe("Databases simple faker test", () => {
     class BaseUser {
@@ -107,13 +108,14 @@ describe("Databases simple faker test", () => {
 
         const repository = dataSource.getRepository(UserEntity);
 
-        const userFaker = createFaker(dataSource, UserEntity, {
+        registerFaker(dataSource, UserEntity, {
             firstName: () => faker.person.firstName(),
             lastName: () => faker.person.lastName(),
         });
 
         const countBefore = await repository.count();
 
+        const userFaker = registry.getFaker(dataSource, UserEntity);
         await userFaker.createOne();
 
         expect(await repository.count()).toBe(countBefore + 1);
