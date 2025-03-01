@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { registerFaker } from "../src/register-faker";
+import { createFaker } from "../src/create-faker";
 import {
     Column,
     DataSource,
@@ -88,16 +88,16 @@ describe("Faker with many to one relation test", () => {
         userRepository = dataSource.getRepository(User);
         postRepository = dataSource.getRepository(Post);
 
-        genderFaker = registerFaker(dataSource, Gender, {
+        genderFaker = createFaker(dataSource, Gender, {
             name: () => faker.person.gender(),
         });
 
-        userFaker = registerFaker(dataSource, User, {
+        userFaker = createFaker(dataSource, User, {
             firstName: () => faker.person.firstName(),
             lastName: () => faker.person.lastName(),
         });
 
-        postFaker = registerFaker(dataSource, Post, {
+        postFaker = createFaker(dataSource, Post, {
             text: () => faker.lorem.text(),
         });
     });

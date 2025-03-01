@@ -10,7 +10,7 @@ import {
     PrimaryGeneratedColumn,
 } from "typeorm";
 
-import { registerFaker } from "../src/register-faker";
+import { createFaker } from "../src/create-faker";
 import { Type } from "interfaces/type.interface";
 
 describe("Databases simple faker test", () => {
@@ -107,7 +107,7 @@ describe("Databases simple faker test", () => {
 
         const repository = dataSource.getRepository(UserEntity);
 
-        const userFaker = registerFaker(dataSource, UserEntity, {
+        const userFaker = createFaker(dataSource, UserEntity, {
             firstName: () => faker.person.firstName(),
             lastName: () => faker.person.lastName(),
         });
