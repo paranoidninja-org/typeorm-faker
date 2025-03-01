@@ -121,20 +121,21 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
                     propertiesToCheck.push(propertyName);
                 }
 
-                if (atLeastOneVirtual) {
-                    continue;
-                }
-
-                let allDefined = true;
-                for (const propertyToCheck of propertiesToCheck) {
-                    if ((entity as any)[propertyToCheck] === undefined || (entity as any)[propertyToCheck] === null) {
-                        allDefined = false;
-                        break;
+                if (!atLeastOneVirtual) {
+                    let allDefined = true;
+                    for (const propertyToCheck of propertiesToCheck) {
+                        if (
+                            (entity as any)[propertyToCheck] === undefined
+                            || (entity as any)[propertyToCheck] === null
+                        ) {
+                            allDefined = false;
+                            break;
+                        }
                     }
-                }
 
-                if (allDefined) {
-                    continue;
+                    if (allDefined) {
+                        continue;
+                    }
                 }
 
                 const relationProperty = manyToOneRelation.propertyName;
