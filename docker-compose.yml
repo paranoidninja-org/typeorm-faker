@@ -123,11 +123,12 @@ services:
   #     - 59013-59014:59013-59014
 
   # mongodb
-  # mongodb:
-  #   image: "mongo:5.0.12"
-  #   container_name: "typeorm-mongodb"
-  #   ports:
-  #     - "27017:27017"
+  mongodb:
+    image: "mongo:5.0.12"
+    container_name: "typeorm-mongodb"
+    ports:
+      - "27017:27017"
+
   # redis
   # redis:
   #   image: "redis:3.0.3"
