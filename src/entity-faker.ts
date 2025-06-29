@@ -110,7 +110,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
             const dependencyRelations = entityMetadata.manyToOneRelations.slice();
             outer: for (const oneToOneRelation of entityMetadata.oneToOneRelations) {
                 for (const joinColumn of oneToOneRelation.joinColumns) {
-                    if (joinColumn.target !== this.entityClass) {
+                    if (joinColumn.target !== entityMetadata.target) {
                         continue outer;
                     }
                 }
