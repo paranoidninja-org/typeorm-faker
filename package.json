@@ -1,6 +1,6 @@
 {
   "name": "@paranoidninja/typeorm-faker",
-  "version": "0.0.0-alpha",
+  "version": "0.1.1",
   "description": "A utility to facilitate defining TypeORM mock entity generators",
   "keywords": [
     "typeorm",
@@ -11,6 +11,9 @@
     "javascript",
     "faker-js"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "homepage": "https://github.com/paranoidninja-org/typeorm-faker#readme",
   "bugs": {
     "url": "https://github.com/paranoidninja-org/typeorm-faker/issues"
@@ -22,7 +25,8 @@
   "license": "MIT",
   "author": "Ahmed Osama Ibrahim <ahmed.osama94@gmail.com>",
   "type": "commonjs",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf ./dist",
     "build": "npm run clean && tsc",
@@ -51,5 +55,8 @@
   "peerDependencies": {
     "reflect-metadata": "^0.2.2",
     "typeorm": "^0.3.28"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }

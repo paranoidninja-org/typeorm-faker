@@ -29,5 +29,10 @@
     "strictPropertyInitialization": true,
     "useUnknownInCatchVariables": true,
     "types": ["vitest/globals"]
-  }
+  },
+  "exclude": [
+    "tests/**/*",
+    "**/*.spec.ts",
+    "vitest.config.ts"
+  ]
 }
