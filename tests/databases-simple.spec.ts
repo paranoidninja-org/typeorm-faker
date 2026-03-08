@@ -120,7 +120,11 @@ describe("Databases simple faker test", () => {
 
         expect(await repository.count()).toBe(countBefore + 1);
 
-        await repository.delete({});
+        if (options.type === "mongodb") {
+            await repository.delete({});
+        } else {
+            await repository.deleteAll();
+        }
 
         await dataSource.destroy();
     });

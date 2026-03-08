@@ -53,7 +53,7 @@ describe("Simple faker test", () => {
     });
 
     afterEach(async () => {
-        await repository.delete({});
+        await repository.deleteAll();
         vi.resetAllMocks();
     });
 

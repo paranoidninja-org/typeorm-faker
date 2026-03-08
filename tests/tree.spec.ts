@@ -102,10 +102,10 @@ describe("Faker for tree entity tests", () => {
     });
 
     afterAll(async () => {
-        await alCategoryRepo.delete({});
-        await nsCategoryRepo.delete({});
-        await mpCategoryRepo.delete({});
-        await ctCategoryRepo.delete({});
+        await alCategoryRepo.deleteAll();
+        await nsCategoryRepo.deleteAll();
+        await mpCategoryRepo.deleteAll();
+        await ctCategoryRepo.deleteAll();
 
         await dataSource.destroy();
     });
@@ -128,9 +128,9 @@ describe("Faker for tree entity tests", () => {
 
             expect(repository.hasId(fakeCategory)).toBe(true);
             expect(fakeCategory.parent).toBeTruthy();
-            expect(repository.hasId(fakeCategory.parent)).toBe(true);
+            expect(repository.hasId(fakeCategory.parent!)).toBe(true);
             expect(fakeCategory.parent?.parent).toBeTruthy();
-            expect(repository.hasId(fakeCategory.parent!.parent)).toBe(true);
+            expect(repository.hasId(fakeCategory.parent!.parent!)).toBe(true);
         },
     );
 });
