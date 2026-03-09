@@ -1,4 +1,4 @@
-# `@paranoidninja/typeorm-faker`
+# `typeorm-faker`
 
 `typeorm-faker` helps you define reusable, typed factories for TypeORM entities.
 
