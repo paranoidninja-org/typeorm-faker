@@ -14,4 +14,6 @@ export function registerFaker<T extends ObjectLiteral>(
     const entityFaker = new EntityFaker(dataSource, entityClass, config);
 
     Registry.instance.registerFaker(dataSource, entityClass, entityFaker);
+
+    return entityFaker;
 }

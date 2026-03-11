@@ -23,12 +23,6 @@ This package gives you:
 npm install @paranoidninja/typeorm-faker
 ```
 
-Peer dependencies:
-
-```bash
-npm install typeorm reflect-metadata
-```
-
 ## Quick start
 
 ```ts
