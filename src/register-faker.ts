@@ -11,8 +11,9 @@ export function registerFaker<T extends ObjectLiteral>(
     entityClass: Type<T>,
     config: FakerConfig<T>,
     subClass: Type<EntityFaker> = EntityFaker,
+    ...extraConstructorArgs: unknown[]
 ) {
-    const entityFaker = new subClass(dataSource, entityClass, config);
+    const entityFaker = new subClass(dataSource, entityClass, config, ...extraConstructorArgs);
 
     Registry.instance.registerFaker(dataSource, entityClass, entityFaker);
 
