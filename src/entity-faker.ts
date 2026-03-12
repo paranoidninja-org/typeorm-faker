@@ -10,6 +10,7 @@ import type { FakerConfig } from "./interfaces/faker-config.interface";
 import type { Type } from "./interfaces/type.interface";
 
 import { proxiedRegistry } from "./proxied-registry";
+import { FakerFnInput } from "./interfaces/faker-input.interface";
 
 export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
     constructor(
@@ -17,6 +18,10 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         private readonly entityClass: Type<T>,
         private readonly config: FakerConfig<T>,
     ) {}
+
+    getFunctionInput(): FakerFnInput {
+        return { registry: proxiedRegistry };
+    }
 
     async buildOne(overrides: FakerOverrides<T> = {}): Promise<T> {
         const instance: T = new this.entityClass();
@@ -26,7 +31,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         for (const [key, value] of Object.entries(overrides)) {
             if (typeof value === "function") {
                 // TODO: pass dependencies to faker fn
-                (instance as any)[key] = await value({ registry: proxiedRegistry });
+                (instance as any)[key] = await value(this.getFunctionInput());
             } else {
                 (instance as any)[key] = value;
             }
@@ -39,7 +44,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
                 continue;
             }
 
-            (instance as any)[key] = await fnValue({ registry: proxiedRegistry });
+            (instance as any)[key] = await fnValue(this.getFunctionInput());
         }
 
         return instance;
@@ -92,7 +97,7 @@ export class EntityFaker<T extends ObjectLiteral = ObjectLiteral> {
         return isArray ? savedInstances : savedInstances[0]!;
     }
 
-    private async resolveAndSaveDependencies<OtherEntity extends ObjectLiteral>(entityArray: OtherEntity[]) {
+    private async resolveAndSaveDependencies(entityArray: ObjectLiteral[]) {
         if (entityArray.length === 0) {
             return;
         }

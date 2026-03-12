@@ -10,8 +10,9 @@ export function registerFaker<T extends ObjectLiteral>(
     dataSource: DataSource,
     entityClass: Type<T>,
     config: FakerConfig<T>,
+    subClass: Type<EntityFaker> = EntityFaker,
 ) {
-    const entityFaker = new EntityFaker(dataSource, entityClass, config);
+    const entityFaker = new subClass(dataSource, entityClass, config);
 
     Registry.instance.registerFaker(dataSource, entityClass, entityFaker);
 

@@ -1,6 +1,6 @@
 {
   "name": "@paranoidninja/typeorm-faker",
-  "version": "1.1.1",
+  "version": "1.2.0",
   "description": "A utility to facilitate defining TypeORM mock entity generators",
   "keywords": [
     "typeorm",
@@ -29,7 +29,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "clean": "rm -rf ./dist",
-    "build": "npm run clean && tsc",
+    "build": "npm run clean && tsc -p ./tsconfig.build.json",
     "test": "vitest run",
     "test:ci": "docker compose up -d; sleep 10; npm run test; docker compose down",
     "test:watch": "vitest"
